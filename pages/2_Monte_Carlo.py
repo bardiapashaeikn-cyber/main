@@ -5,10 +5,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import datetime as dt
 
-st.set_page_config(
-    page_title="Monte Carlo Stock Forecast",
-    layout="centered"
-)
+
 
 st.title("Monte Carlo Stock Forecast")
 
