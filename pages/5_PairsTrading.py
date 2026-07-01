@@ -8,53 +8,28 @@ import statsmodels.api as sm
 
 st.set_page_config(layout="wide")
 
-st.title("📈 Pairs Trading Analyzer (Clean UI)")
+st.title("📈 Pairs Trading Analyzer")
 
 # -----------------------
-# CENTERED CONTAINER
+# Inputs
 # -----------------------
 
-with st.container():
-    st.markdown(
-        """
-        <style>
-        .block-container {
-            max-width: 900px;
-            margin: auto;
-        }
+col1, col2 = st.columns(2)
 
-        .stApp {
-            background-color: "White";
-        }
+with col1:
+    ticker1 = st.text_input("Ticker 1", "KO")
 
-        .input-box {
-            background-color: #1c1f26;
-            padding: 20px;
-            border-radius: 12px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+with col2:
+    ticker2 = st.text_input("Ticker 2", "PEP")
 
-    st.markdown("### 🎯 Pair Selection Panel")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        ticker1 = st.text_input("Ticker 1", "KO")
-
-    with col2:
-        ticker2 = st.text_input("Ticker 2", "PEP")
-
-    period = st.selectbox(
-        "History",
-        ["1y", "2y", "5y", "10y"],
-        index=2
-    )
+period = st.selectbox(
+    "History",
+    ["1y", "2y", "5y", "10y"],
+    index=2
+)
 
 # -----------------------
-# DATA
+# Download Data
 # -----------------------
 
 data1 = yf.download(ticker1, period=period)["Close"]
@@ -64,78 +39,96 @@ df = pd.concat([data1, data2], axis=1)
 df.columns = [ticker1, ticker2]
 df = df.dropna()
 
-if df.empty or len(df) < 50:
-    st.error("Not enough data")
-    st.stop()
-
 # -----------------------
-# ANALYSIS
+# Cointegration Test
 # -----------------------
 
 score, pvalue, _ = coint(df[ticker1], df[ticker2])
 
-correlation = df[ticker1].corr(df[ticker2])
+# -----------------------
+# Hedge Ratio
+# -----------------------
 
 X = sm.add_constant(df[ticker2])
 model = sm.OLS(df[ticker1], X).fit()
 
-beta = model.params[df.columns[1]]
+beta = model.params[ticker2]
+
+# -----------------------
+# Spread
+# -----------------------
 
 spread = df[ticker1] - beta * df[ticker2]
-zscore = (spread - spread.mean()) / spread.std()
+
+# -----------------------
+# Z Score
+# -----------------------
+
+zscore = (
+    spread - spread.mean()
+) / spread.std()
 
 current_z = zscore.iloc[-1]
 
 # -----------------------
-# FILTER
+# Signal
 # -----------------------
 
-is_valid_pair = (pvalue < 0.05) and (abs(correlation) > 0.7)
+if current_z > 2:
+    signal = f"🔴 SHORT {ticker1} / LONG {ticker2}"
 
-if not is_valid_pair:
-    signal = "❌ NOT A VALID PAIRS TRADING RELATIONSHIP"
+elif current_z < -2:
+    signal = f"🟢 LONG {ticker1} / SHORT {ticker2}"
+
 else:
-    if current_z > 2:
-        signal = f"🔴 SHORT {ticker1} / LONG {ticker2}"
-    elif current_z < -2:
-        signal = f"🟢 LONG {ticker1} / SHORT {ticker2}"
-    else:
-        signal = "⚪ NO SIGNAL"
+    signal = "⚪ NO SIGNAL"
 
 # -----------------------
-# METRICS
+# Metrics
 # -----------------------
-
-st.markdown("### 📊 Metrics")
 
 c1, c2, c3, c4 = st.columns(4)
 
-c1.metric("p-value", f"{pvalue:.4f}")
-c2.metric("Correlation", f"{correlation:.2f}")
+c1.metric("Cointegration p-value", f"{pvalue:.4f}")
+c2.metric("Correlation", f"{df[ticker1].corr(df[ticker2]):.2f}")
 c3.metric("Beta", f"{beta:.2f}")
-c4.metric("Z-Score", f"{current_z:.2f}")
+c4.metric("Current Z-Score", f"{current_z:.2f}")
 
-st.markdown("### ⚡ Signal")
+st.subheader("Trading Signal")
 st.success(signal)
 
 # -----------------------
-# SMALLER CHARTS
+# Spread Chart
 # -----------------------
 
-st.markdown("### 📉 Spread")
+fig, ax = plt.subplots(figsize=(10,4))
 
-fig, ax = plt.subplots(figsize=(6, 2.5))
 ax.plot(spread)
-ax.axhline(spread.mean(), linestyle="--")
+
+ax.axhline(
+    spread.mean(),
+    linestyle="--",
+    label="Mean"
+)
+
 ax.set_title("Spread")
+
+ax.legend()
+
 st.pyplot(fig)
 
-st.markdown("### 📈 Z-Score")
+# -----------------------
+# Z-Score Chart
+# -----------------------
 
-fig, ax = plt.subplots(figsize=(6, 2.5))
+fig, ax = plt.subplots(figsize=(10,4))
+
 ax.plot(zscore)
+
 ax.axhline(2, color="red", linestyle="--")
 ax.axhline(-2, color="green", linestyle="--")
-ax.axhline(0, color="Black")
+ax.axhline(0, color="black")
+
 ax.set_title("Z-Score")
+
 st.pyplot(fig)
