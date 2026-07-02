@@ -55,22 +55,56 @@ gap_direction = st.sidebar.selectbox(
 
 st.sidebar.markdown("---")
 
-gap_min = st.sidebar.number_input(
-    "Minimum Gap (%)",
-    value=-2.0,
-    step=0.1,
-    format="%.2f"
-)
+if gap_direction == "Gap Up":
+    gap_min = st.sidebar.number_input(
+        "Minimum Gap (%)",
+        min_value=0.0,
+        max_value=100.0,
+        value=2.0,
+        step=0.1,
+        format="%.2f"
+    )
 
-gap_max = st.sidebar.number_input(
-    "Maximum Gap (%)",
-    value=-1.0,
-    step=0.1,
-    format="%.2f"
-)
+    gap_max = st.sidebar.number_input(
+        "Maximum Gap (%)",
+        min_value=0.0,
+        max_value=100.0,
+        value=5.0,
+        step=0.1,
+        format="%.2f"
+    )
+
+else:  # Gap Down
+    gap_min = st.sidebar.number_input(
+        "Minimum Gap (%)",
+        min_value=-100.0,
+        max_value=0.0,
+        value=-2.0,
+        step=0.1,
+        format="%.2f"
+    )
+
+    gap_max = st.sidebar.number_input(
+        "Maximum Gap (%)",
+        min_value=-100.0,
+        max_value=0.0,
+        value=-1.0,
+        step=0.1,
+        format="%.2f"
+    )
 
 run_button = st.sidebar.button("Analyze")
 
+# Validate gap range
+if gap_direction == "Gap Up":
+    if gap_min < 0 or gap_max < 0:
+        st.sidebar.error("Gap Up values must be 0 or greater.")
+        st.stop()
+
+elif gap_direction == "Gap Down":
+    if gap_min > 0 or gap_max > 0:
+        st.sidebar.error("Gap Down values must be 0 or less.")
+        st.stop()
 
 # ----------------------------------------------------
 # Helper Function
