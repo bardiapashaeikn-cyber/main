@@ -29,9 +29,9 @@ Today's Low <= Yesterday's Close
 
 st.sidebar.header("Inputs")
 
-ticker_input = st.sidebar.text_area(
-    "Tickers (comma separated)",
-    value="AAPL,MSFT,NVDA"
+ticker_input = st.sidebar.text_input(
+    "Ticker(s)",
+    value="AAPL"
 )
 
 start_date = st.sidebar.date_input(
@@ -171,20 +171,33 @@ def analyze_gap(df, ticker):
         if keep:
 
             rows.append(
-                {
-                    "Ticker": ticker,
-                    "Date": date,
-                    "Gap Type": gap_type,
-                    "Previous Close": prev_close,
-                    "Open": today_open,
-                    "High": today_high,
-                    "Low": today_low,
-                    "Close": today_close,
-                    "Gap %": gap_pct,
-                    "Filled": filled
-                }
-            )
+    {
+                "Ticker": ticker,
+                "Date": date,
+                "Gap Type": gap_type,
+                "Previous Close": prev_close,
+                "Open": today_open,
+                 "High": today_high,
+                "Low": today_low,
+                "Close": today_close,
+                "Gap %": gap_pct,
 
+                "Filled": filled,
+
+                "Green Close": today_close > today_open,
+
+                "Closed Above Prev Close": today_close >= prev_close,
+
+                 "Open→Close %":
+                    ((today_close / today_open) - 1) * 100,
+
+             "High→Open %":
+                    ((today_high / today_open) - 1) * 100,
+
+                "Low→Open %":
+                 ((today_low / today_open) - 1) * 100
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -249,6 +262,7 @@ if run_button:
     avg_abs_gap = results["Gap %"].abs().mean()
 
     st.markdown("## Overall Statistics")
+    
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -273,6 +287,77 @@ if run_button:
     )
 
     st.markdown("---")
+
+        # ------------------------------------------------
+# Trade Statistics
+# ------------------------------------------------
+
+    st.subheader("📊 Trade Statistics")
+
+    green_probability = results["Green Close"].mean() * 100
+
+    close_prev_probability = (
+        results["Closed Above Prev Close"].mean() * 100
+    )
+
+    avg_return = results["Open→Close %"].mean()
+
+    median_return = results["Open→Close %"].median()
+
+    avg_recovery = results["High→Open %"].mean()
+
+    avg_drawdown = results["Low→Open %"].mean()
+
+    best_day = results["Open→Close %"].max()
+
+    worst_day = results["Open→Close %"].min()
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric(
+        "Green Close %",
+        f"{green_probability:.2f}%"
+    )
+
+    col2.metric(
+        "Close Above Prev Close %",
+        f"{close_prev_probability:.2f}%"
+    )
+
+    col3.metric(
+        "Average Return",
+        f"{avg_return:.2f}%"
+    )
+
+    col4.metric(
+        "Median Return",
+        f"{median_return:.2f}%"
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric(
+        "Average Max Recovery",
+        f"{avg_recovery:.2f}%"
+    )
+
+    col2.metric(
+        "Average Max Drawdown",
+        f"{avg_drawdown:.2f}%"
+    )
+
+    col3.metric(
+        "Best Return",
+        f"{best_day:.2f}%"
+    )
+
+    col4.metric(
+        "Worst Return",
+        f"{worst_day:.2f}%"
+    )
+
+    st.markdown("---")
+
 
     # ------------------------------------------------
     # Per-Ticker Statistics
