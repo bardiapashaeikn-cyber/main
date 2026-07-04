@@ -195,7 +195,7 @@ if run:
             (df["Today Return %"] <= upper)
         ]
 
-    st.success(f"Found {len(matches)} historical matches.")
+    
 
 
     # -------------------------------------------------------
@@ -223,7 +223,8 @@ if run:
     # -------------------------------------------------------
 # Statistics
 # -------------------------------------------------------
-
+    st.success(f"Found {len(matches)} historical matches.")
+    
     if len(matches) == 0:
         st.warning("No historical matches found.")
         st.stop()
