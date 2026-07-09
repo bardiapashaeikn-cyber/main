@@ -21,7 +21,7 @@ st.sidebar.header("Settings")
 
 ticker = st.sidebar.text_input(
     "Ticker",
-    
+    value="AAPL"
 ).upper()
 
 years = st.sidebar.slider(
