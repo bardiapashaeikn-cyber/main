@@ -4,6 +4,117 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+# =====================================================
+# INDUSTRY PEERS
+# =====================================================
+
+industry_peers = {
+
+    "Semiconductors": [
+        "NVDA","AVGO","AMD","QCOM","TXN",
+        "MU","ADI","INTC","MCHP","ON"
+    ],
+
+    "Drug Manufacturers - General": [
+        "LLY","JNJ","ABBV","MRK","PFE",
+        "BMY","AMGN","GILD","VRTX","REGN"
+    ],
+
+    "Biotechnology": [
+        "VRTX","REGN","GILD","AMGN",
+        "SRPT","MRNA","BIIB","BNTX",
+        "EXEL","ALNY"
+    ],
+
+    "Software - Application": [
+        "CRM","NOW","ADBE","INTU","SNOW",
+        "DOCU","TEAM","DDOG","HUBS","SHOP"
+    ],
+
+    "Software - Infrastructure": [
+        "MSFT","ORCL","PANW","CRWD",
+        "ZS","NET","OKTA","FTNT",
+        "MDB","ESTC"
+    ],
+
+    "Internet Retail": [
+        "AMZN","MELI","PDD","BABA",
+        "JD","EBAY","ETSY","SHOP",
+        "CPNG","SE"
+    ],
+
+    "Electronic Components": [
+        "APH","TEL","GLW","JBL",
+        "SANM","BHE","CLS","PLXS",
+        "VSH","LITE"
+    ],
+
+    "Semiconductor Equipment & Materials": [
+        "ASML","AMAT","LRCX","KLAC",
+        "TER","ENTG","MKSI","ONTO",
+        "ACLS","UCTT"
+    ],
+
+    "Communication Equipment": [
+        "CSCO","ANET","CIEN","JNPR",
+        "UI","CALX","COMM","EXTR",
+        "INFN","DGII"
+    ],
+
+    "Auto Manufacturers": [
+        "TSLA","GM","F","RIVN",
+        "LCID","NIO","XPEV","LI",
+        "TM","HMC"
+    ],
+
+    "Banks - Diversified": [
+        "JPM","BAC","C","WFC",
+        "GS","MS","USB","PNC",
+        "TFC","COF"
+    ],
+
+    "Capital Markets": [
+        "SCHW","BLK","KKR","BX",
+        "APO","CME","ICE","NDAQ",
+        "SPGI","MCO"
+    ],
+
+    "Insurance - Diversified": [
+        "BRK-B","AIG","ALL","PGR",
+        "TRV","CB","MET","PRU",
+        "AFL","HIG"
+    ],
+
+    "Oil & Gas Integrated": [
+        "XOM","CVX","SHEL","BP",
+        "TTE","COP","EOG","OXY",
+        "MPC","PSX"
+    ],
+
+    "REIT - Industrial": [
+        "PLD","REXR","EGP","FR",
+        "STAG","TRNO","PLYM","ILPT",
+        "LXP","DEA"
+    ],
+
+    "Medical Devices": [
+        "ABT","SYK","ISRG","BSX",
+        "MDT","EW","DXCM","ZBH",
+        "HOLX","BAX"
+    ],
+    "Consumer Electronics": [
+    "AAPL",
+    "SONY",
+    "DELL",
+    "HPQ",
+    "LOGI",
+    "VZIO",
+    "GRMN",
+    "HIMX",
+    "XIAOMI",
+    "005930.KS"
+    ],
+}
 st.set_page_config(
     page_title="Exceed Pro",
     page_icon="📈",
@@ -801,8 +912,204 @@ else:
         "Not enough similar historical days were found. Try increasing the tolerance ranges."
     )
 
+# =====================================================
+# SECTOR ANALYSIS
+# =====================================================
 
-    # =====================================================
+st.divider()
+
+st.header("🏭 Sector")
+
+sector_df = pd.DataFrame()
+
+try:
+
+    info = yf.Ticker(ticker).info
+
+    industry = info.get("industry", "Unknown")
+
+    st.write("Industry from Yahoo:", industry)
+
+    st.write(industry)
+
+    st.write(f"**Industry:** {industry}")
+
+    peers = industry_peers.get(industry, [])
+
+    if len(peers) == 0:
+
+        st.warning("Industry is not yet supported.")
+
+    else:
+
+        rows = []
+
+        for peer in peers:
+
+            try:
+
+                tk = yf.Ticker(peer)
+
+                hist = tk.history(period="2d")
+
+                if len(hist) < 2:
+                    continue
+
+                prev_close = hist["Close"].iloc[-2]
+
+                hist_today = tk.history(
+                    period="1d",
+                    interval="1m",
+                    prepost=True
+                    )
+
+                if hist_today.empty:
+                        latest = prev_close
+                else:
+                    latest = hist_today["Close"].iloc[-1]
+
+                market_cap = tk.info.get("marketCap", 0)
+
+                change = (
+                    (latest - prev_close)
+                    / prev_close
+                ) * 100
+
+                rows.append({
+
+                    "Ticker": peer,
+
+                    "Market Cap": market_cap,
+
+                    "Previous Close": prev_close,
+
+                    "Extended Price": latest,
+
+                    "Change %": change
+
+                })
+
+            except:
+
+                pass
+
+        sector_df = pd.DataFrame(rows)
+
+        sector_df = sector_df.sort_values(
+            "Market Cap",
+            ascending=False
+        )
+
+        sector_df = sector_df.head(10)
+
+except Exception as e:
+    st.error(f"Sector Error: {e}")
+        
+
+# =====================================================
+# DISPLAY SECTOR TABLE
+# =====================================================
+
+if len(sector_df) > 0:
+
+    sector_df["Market Cap"] = (
+        sector_df["Market Cap"] / 1_000_000_000
+    ).round(1)
+
+    sector_df["Previous Close"] = sector_df["Previous Close"].round(2)
+    sector_df["Extended Price"] = sector_df["Extended Price"].round(2)
+    sector_df["Change %"] = sector_df["Change %"].round(2)
+
+    st.dataframe(
+        sector_df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    st.divider()
+
+    sector_avg = sector_df["Change %"].mean()
+
+    sector_median = sector_df["Change %"].median()
+
+    red = (sector_df["Change %"] < 0).sum()
+
+    green = (sector_df["Change %"] >= 0).sum()
+
+    try:
+        your_change = float(
+            sector_df.loc[
+                sector_df["Ticker"] == ticker,
+                "Change %"
+            ].iloc[0]
+        )
+
+        relative = your_change - sector_avg
+
+    except:
+
+        your_change = np.nan
+        relative = np.nan
+
+    c1, c2, c3 = st.columns(3)
+
+    c1.metric(
+        "Sector Average",
+        f"{sector_avg:.2f}%"
+    )
+
+    c2.metric(
+        "Sector Median",
+        f"{sector_median:.2f}%"
+    )
+
+    c3.metric(
+        "Relative Strength",
+        f"{relative:.2f}%"
+    )
+
+    c1, c2, c3 = st.columns(3)
+
+    c1.metric(
+        "Stocks Green",
+        green
+    )
+
+    c2.metric(
+        "Stocks Red",
+        red
+    )
+
+    c3.metric(
+        "Your Stock",
+        f"{your_change:.2f}%"
+    )
+
+    st.divider()
+
+    if relative <= -2:
+
+        st.error(
+            f"{ticker} is significantly UNDERPERFORMING its sector today."
+        )
+
+    elif relative >= 2:
+
+        st.success(
+            f"{ticker} is significantly OUTPERFORMING its sector today."
+        )
+
+    else:
+
+        st.info(
+            f"{ticker} is trading roughly IN LINE with its sector."
+        )
+
+else:
+
+    st.warning("No sector data available.")
+
+# =====================================================
 # PART 5 - CHARTS & EXPORT
 # =====================================================
 
