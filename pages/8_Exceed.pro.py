@@ -8,112 +8,62 @@ import matplotlib.pyplot as plt
 # INDUSTRY PEERS
 # =====================================================
 
-industry_peers = {
+sector_peers = {
 
-    "Semiconductors": [
-        "NVDA","AVGO","AMD","QCOM","TXN",
-        "MU","ADI","INTC","MCHP","ON"
+    "Technology": [
+        "MSFT","NVDA","AAPL","AVGO","ORCL",
+        "CRM","ADBE","AMD","CSCO","QCOM"
     ],
 
-    "Drug Manufacturers - General": [
+    "Communication Services": [
+        "GOOGL","META","NFLX","DIS","TMUS",
+        "CMCSA","T","VZ","CHTR","SPOT"
+    ],
+
+    "Healthcare": [
         "LLY","JNJ","ABBV","MRK","PFE",
-        "BMY","AMGN","GILD","VRTX","REGN"
+        "AMGN","ISRG","TMO","DHR","VRTX"
     ],
 
-    "Biotechnology": [
-        "VRTX","REGN","GILD","AMGN",
-        "SRPT","MRNA","BIIB","BNTX",
-        "EXEL","ALNY"
+    "Financial Services": [
+        "BRK-B","JPM","V","MA","BAC",
+        "WFC","GS","MS","AXP","BLK"
     ],
 
-    "Software - Application": [
-        "CRM","NOW","ADBE","INTU","SNOW",
-        "DOCU","TEAM","DDOG","HUBS","SHOP"
+    "Consumer Cyclical": [
+        "AMZN","TSLA","HD","MCD","LOW",
+        "BKNG","TJX","NKE","SBUX","CMG"
     ],
 
-    "Software - Infrastructure": [
-        "MSFT","ORCL","PANW","CRWD",
-        "ZS","NET","OKTA","FTNT",
-        "MDB","ESTC"
+    "Consumer Defensive": [
+        "WMT","COST","PG","KO","PEP",
+        "PM","MO","CL","KMB","GIS"
     ],
 
-    "Internet Retail": [
-        "AMZN","MELI","PDD","BABA",
-        "JD","EBAY","ETSY","SHOP",
-        "CPNG","SE"
+    "Industrials": [
+        "GE","RTX","CAT","UBER","UNP",
+        "HON","ETN","DE","LMT","BA"
     ],
 
-    "Electronic Components": [
-        "APH","TEL","GLW","JBL",
-        "SANM","BHE","CLS","PLXS",
-        "VSH","LITE"
+    "Energy": [
+        "XOM","CVX","COP","EOG","SLB",
+        "MPC","PSX","OXY","VLO","KMI"
     ],
 
-    "Semiconductor Equipment & Materials": [
-        "ASML","AMAT","LRCX","KLAC",
-        "TER","ENTG","MKSI","ONTO",
-        "ACLS","UCTT"
+    "Utilities": [
+        "NEE","SO","DUK","AEP","EXC",
+        "XEL","SRE","PEG","D","ED"
     ],
 
-    "Communication Equipment": [
-        "CSCO","ANET","CIEN","JNPR",
-        "UI","CALX","COMM","EXTR",
-        "INFN","DGII"
+    "Real Estate": [
+        "PLD","AMT","EQIX","WELL","O",
+        "PSA","CCI","SPG","DLR","CBRE"
     ],
 
-    "Auto Manufacturers": [
-        "TSLA","GM","F","RIVN",
-        "LCID","NIO","XPEV","LI",
-        "TM","HMC"
-    ],
-
-    "Banks - Diversified": [
-        "JPM","BAC","C","WFC",
-        "GS","MS","USB","PNC",
-        "TFC","COF"
-    ],
-
-    "Capital Markets": [
-        "SCHW","BLK","KKR","BX",
-        "APO","CME","ICE","NDAQ",
-        "SPGI","MCO"
-    ],
-
-    "Insurance - Diversified": [
-        "BRK-B","AIG","ALL","PGR",
-        "TRV","CB","MET","PRU",
-        "AFL","HIG"
-    ],
-
-    "Oil & Gas Integrated": [
-        "XOM","CVX","SHEL","BP",
-        "TTE","COP","EOG","OXY",
-        "MPC","PSX"
-    ],
-
-    "REIT - Industrial": [
-        "PLD","REXR","EGP","FR",
-        "STAG","TRNO","PLYM","ILPT",
-        "LXP","DEA"
-    ],
-
-    "Medical Devices": [
-        "ABT","SYK","ISRG","BSX",
-        "MDT","EW","DXCM","ZBH",
-        "HOLX","BAX"
-    ],
-    "Consumer Electronics": [
-    "AAPL",
-    "SONY",
-    "DELL",
-    "HPQ",
-    "LOGI",
-    "VZIO",
-    "GRMN",
-    "HIMX",
-    "XIAOMI",
-    "005930.KS"
-    ],
+    "Basic Materials": [
+        "LIN","APD","ECL","NEM","FCX",
+        "SHW","DD","IFF","MLM","VMC"
+    ]
 }
 st.set_page_config(
     page_title="Exceed Pro",
@@ -926,20 +876,18 @@ try:
 
     info = yf.Ticker(ticker).info
 
-    industry = info.get("industry", "Unknown")
+    sector = info.get("sector", "Unknown")
 
-    st.write("Industry from Yahoo:", industry)
+    st.write(f"Sector: {sector}")
 
-    st.write(industry)
+    peers = sector_peers.get(sector, [])
 
-    st.write(f"**Industry:** {industry}")
+    st.subheader(f"{sector} Sector")
 
-    peers = industry_peers.get(industry, [])
+    peers = sector_peers.get(sector, [])
 
     if len(peers) == 0:
-
-        st.warning("Industry is not yet supported.")
-
+        st.warning("Sector is not supported.")
     else:
 
         rows = []
