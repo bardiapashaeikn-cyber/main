@@ -328,11 +328,13 @@ if analyze:
 
         table.append({
 
-            "Move (%)": level,
+            "Target Above Entry (%)": f"+{level:.2f}",
 
-            "Upside Probability (%)": round(upside,1),
+            "Reached Before Close (%)": round(upside, 1),
 
-            "Further Downside Probability (%)": round(downside,1)
+            "Further Drop Below Entry (%)": f"-{level:.2f}",
+
+            "Reached Before Close (Downside %)": round(downside, 1)
 
         })
 
