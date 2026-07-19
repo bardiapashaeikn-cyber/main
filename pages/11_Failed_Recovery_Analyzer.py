@@ -16,14 +16,13 @@ st.set_page_config(
 
 st.title("📉 Failed Recovery Analyzer")
 
-st.write(
-    """
-This tool analyzes historical days where a stock opened at a specified move
-from the previous close and **FAILED** to recover back to yesterday's close.
+st.write("""
+This tool analyzes all historical trading days that failed
+to recover back to the previous day's close.
 
-It then calculates how much the stock usually bounced before the end of the day.
-"""
-)
+It then measures how much the stock typically bounced
+despite failing to recover.
+""")
 
 # ==========================================================
 # USER INPUTS
@@ -44,6 +43,15 @@ with col2:
         max_value=20,
         value=5
     )
+
+move = st.number_input(
+    "Opening Move (%)",
+    value=-1.0,
+    step=0.5,
+    format="%.2f"
+)
+
+tolerance = 0.25
 
 
 # ==========================================================
@@ -107,6 +115,11 @@ if st.button("Analyze"):
         / df["Prev Close"]
         * 100
     )
+    # Keep only days that opened around the selected move
+    matches = df[
+        (df["Open Move %"] >= move - tolerance) &
+        (df["Open Move %"] <= move + tolerance)
+    ].copy()
 
     # Daily return (optional, useful later)
     df["Close Return %"] = (
@@ -128,10 +141,13 @@ if st.button("Analyze"):
     # ==========================================================
 
     # A recovery means the day's high reached yesterday's close
-    df["Recovered"] = df["High"] >= df["Prev Close"]
+    matches["Recovered"] = (
+    matches["High"] >= matches["Prev Close"]
+)
 
-    # Keep ONLY failed recoveries
-    failed = df[df["Recovered"] == False].copy()
+    failed = matches[
+        matches["Recovered"] == False
+    ].copy()
 
     st.divider()
 
@@ -149,14 +165,14 @@ if st.button("Analyze"):
     # A successful recovery means the day's HIGH reached
     # or exceeded yesterday's close.
 
-    total_days = len(df)
+    total_days = len(matches)
     total_failed = len(failed)
     total_recovered = total_days - total_failed
 
     failure_rate = total_failed / total_days * 100
     recovery_rate = total_recovered / total_days * 100
 
-    total_days = len(df)
+    total_days = len(matches)
     total_failed = len(failed)
     total_recovered = total_days - total_failed
 
@@ -169,7 +185,7 @@ if st.button("Analyze"):
 
     st.divider()
 
-    st.subheader("Recovery Summary")
+    st.subheader(f"Recovery Summary (Opened Around {move:.2f}%)")
 
     c1, c2, c3, c4 = st.columns(4)
 
