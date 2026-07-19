@@ -49,7 +49,12 @@ move = st.number_input(
     value=-1.0,
     step=0.5,
     format="%.2f"
-)
+    )
+tolerance = st.number_input(
+    "Opening Move Tolerance (%)",
+    value=0.25,
+    step=0.25
+    )
 
 tolerance = 0.25
 
